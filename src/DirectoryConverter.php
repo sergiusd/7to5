@@ -96,7 +96,7 @@ class DirectoryConverter
         }
 
         $finder = new Finder();
-        $finder->in($sourceDirectory);
+        $finder->in($sourceDirectory)->ignoreDotFiles(false);
         if (!$this->copyNonPhpFiles) {
             foreach ($this->extensions as $extension) {
                 $finder->name('*.'.$extension);
@@ -115,11 +115,14 @@ class DirectoryConverter
             if ($item->isFile()) {
                 $isPhpFile = $this->isPhpFile($target);
                 if ($isPhpFile || $this->copyNonPhpFiles) {
+                    $source = $item->getRealPath();
                     $targetDir = dirname($target);
                     if ($targetDir && !is_dir($targetDir)) {
-                        mkdir($targetDir, 0755, true);
+                        $sourceDir = dirname($source);
+                        mkdir($targetDir, fileperms($sourceDir), true);
                     }
-                    copy($item->getRealPath(), $target);
+                    copy($source, $target);
+                    chmod($target, fileperms($source));
 
                     $this->log($item->getRelativePath(), $target);
 
